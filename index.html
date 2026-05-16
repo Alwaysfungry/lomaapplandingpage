@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F9F8F4" />
+  <meta name="description" content="Loma 是一个安静、克制、漂亮的目标陪伴 App。把今天、本周、本月、今年的重要事项轻轻留在身边。" />
+  <meta property="og:title" content="Loma — 把重要的事，轻轻留在身边" />
+  <meta property="og:description" content="一个有高级审美的目标陪伴 App，支持多时间维度、桌面小部件、分享卡片与热力图回顾。" />
+  <meta property="og:type" content="website" />
+  <title>Loma — 把重要的事，轻轻留在身边</title>
+  <link rel="icon" href="./assets/loma-icon.svg" type="image/svg+xml" />
+  <style>
+    :root {
+      --paper: #f9f8f4;
+      --paper-2: #f1f4ec;
+      --ink: #252720;
+      --muted: #7f8377;
+      --soft: #dfe6d7;
+      --line: rgba(37, 39, 32, .11);
+      --moss: #34c759;
+      --forest: #123d2c;
+      --forest-2: #0b7d4d;
+      --cream: rgba(255, 255, 255, .62);
+      --shadow: 0 30px 90px rgba(25, 38, 29, .16);
+      --radius-xl: 36px;
+      --radius-lg: 24px;
+      --max: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--paper); }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(52,199,89,.16), transparent 28%),
+        radial-gradient(circle at 86% 18%, rgba(11,125,77,.12), transparent 28%),
+        linear-gradient(180deg, #fbfaf6 0%, #f8f7f1 46%, #eef6ec 100%);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+      opacity: .38;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04), rgba(255,255,255,.04)),
+        repeating-radial-gradient(circle at 0 0, rgba(35,36,30,.035) 0 1px, transparent 1px 3px);
+      mix-blend-mode: multiply;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      background: rgba(249, 248, 244, .74);
+      border-bottom: 1px solid rgba(37,39,32,.06);
+    }
+
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 760;
+      letter-spacing: -.02em;
+      font-size: 18px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--paper);
+      box-shadow: inset 0 0 0 1px rgba(37,39,32,.08), 0 8px 20px rgba(34,56,36,.08);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 7px;
+    }
+    .brand-mark span { border-radius: 4px; }
+    .brand-mark span:nth-child(1) { background: #34C759; }
+    .brand-mark span:nth-child(2) { background: #7DDA93; }
+    .brand-mark span:nth-child(3) { background: #BDEBC7; }
+    .brand-mark span:nth-child(4) { background: #E5E5EA; }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 560;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.54);
+      box-shadow: 0 8px 28px rgba(21, 42, 27, .08);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      white-space: nowrap;
+    }
+
+    .pill:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(21,42,27,.12); }
+    .pill.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .pill.green { background: var(--forest); color: #f6fff7; border-color: rgba(255,255,255,.18); }
+
+    .hero {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 92px 22px 58px;
+      display: grid;
+      grid-template-columns: 1.04fr .96fr;
+      gap: 58px;
+      align-items: center;
+      min-height: 760px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border: 1px solid rgba(18,61,44,.10);
+      border-radius: 999px;
+      color: #315344;
+      background: rgba(255,255,255,.46);
+      font-size: 13px;
+      font-weight: 660;
+      letter-spacing: .01em;
+      margin-bottom: 28px;
+    }
+    .eyebrow:before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--moss);
+      box-shadow: 0 0 0 5px rgba(52,199,89,.12);
+    }
+
+    h1 {
+      font-size: clamp(54px, 6.4vw, 98px);
+      line-height: 1.045;
+      letter-spacing: -.035em;
+      margin: 0;
+      font-weight: 820;
+      text-wrap: balance;
+      font-feature-settings: "kern";
+    }
+
+    .hero h1 .line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .hero h1 .line + .line {
+      margin-top: .04em;
+      letter-spacing: -.028em;
+    }
+
+    .hero h1 .dot {
+      color: var(--moss);
+      margin-left: .045em;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      margin-top: 32px;
+      max-width: 610px;
+      color: #5f6659;
+      font-size: clamp(18px, 1.85vw, 21px);
+      line-height: 1.82;
+      letter-spacing: -.006em;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 34px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 28px;
+      margin-top: 34px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 620;
+    }
+    .hero-meta span { display: inline-flex; align-items: center; gap: 8px; }
+    .hero-meta span:before { content: ""; width: 5px; height: 5px; background: var(--moss); border-radius: 50%; opacity: .75; }
+
+    .phone-stage {
+      position: relative;
+      min-height: 640px;
+      display: grid;
+      place-items: center;
+    }
+
+    .aura {
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(52,199,89,.32), transparent 35%),
+        radial-gradient(circle at 60% 70%, rgba(18,61,44,.16), transparent 48%);
+      filter: blur(24px);
+      opacity: .78;
+    }
+
+    .phone {
+      width: min(365px, 80vw);
+      border-radius: 44px;
+      padding: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.35));
+      box-shadow: 0 34px 100px rgba(25, 38, 29, .18);
+      position: relative;
+      z-index: 2;
+      transform: rotate(-1.4deg);
+    }
+
+    .phone img {
+      border-radius: 34px;
+      width: 100%;
+      aspect-ratio: 921 / 2048;
+      object-fit: cover;
+      box-shadow: inset 0 0 0 1px rgba(37,39,32,.1);
+    }
+
+    .float-card {
+      position: absolute;
+      z-index: 4;
+      width: 226px;
+      padding: 18px 18px 17px;
+      border-radius: 26px;
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(24px) saturate(145%);
+      -webkit-backdrop-filter: blur(24px) saturate(145%);
+      border: 1px solid rgba(255,255,255,.68);
+      box-shadow: 0 26px 76px rgba(18,61,44,.145);
+      overflow: hidden;
+      transform-origin: center;
+    }
+
+    .float-card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.48), transparent 58%),
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,.52), transparent 28%);
+      pointer-events: none;
+    }
+
+    .float-card.one {
+      left: -56px;
+      bottom: 92px;
+      width: 230px;
+      transform: rotate(5.2deg);
+    }
+
+    .float-card.two {
+      right: -54px;
+      top: 124px;
+      width: 258px;
+      transform: rotate(-6.2deg);
+    }
+
+    .float-label {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: rgba(37,39,32,.50);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .float-label:before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--moss);
+      box-shadow: 0 0 0 4px rgba(52,199,89,.10);
+    }
+
+    .float-title {
+      position: relative;
+      font-size: 24px;
+      line-height: 1.08;
+      font-weight: 820;
+      letter-spacing: -.04em;
+      text-wrap: balance;
+    }
+
+    .float-card p {
+      position: relative;
+      color: var(--muted);
+      margin: 9px 0 0;
+      line-height: 1.58;
+      font-size: 13px;
+      letter-spacing: -.01em;
+    }
+
+    section {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 94px 22px;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 38px;
+    }
+
+    .kicker {
+      color: var(--forest-2);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: clamp(36px, 5vw, 66px);
+      line-height: 1.08;
+      letter-spacing: -.04em;
+      margin: 0;
+      font-weight: 820;
+      text-wrap: balance;
+    }
+
+    .section-lead {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+      max-width: 720px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .feature {
+      min-height: 230px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 25px;
+      background: rgba(255,255,255,.50);
+      box-shadow: 0 12px 38px rgba(28,42,30,.055);
+      transition: transform .24s ease, box-shadow .24s ease, background .24s ease;
+    }
+
+    .feature:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.64);
+      box-shadow: 0 18px 50px rgba(28,42,30,.085);
+    }
+
+    .feature .num {
+      color: var(--moss);
+      font-weight: 820;
+      margin-bottom: 42px;
+      letter-spacing: -.02em;
+    }
+
+    .feature h3 {
+      font-size: 21px;
+      letter-spacing: -.04em;
+      margin: 0 0 10px;
+    }
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .showcase {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .showcase-copy {
+      border-radius: var(--radius-xl);
+      background:
+        radial-gradient(circle at 82% 82%, rgba(63, 196, 104, .22), transparent 24%),
+        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, .055), transparent 26%),
+        linear-gradient(145deg, #0d3225 0%, #123d2c 54%, #0c2d21 100%);
+      color: #f4fff6;
+      padding: clamp(28px, 4vw, 54px);
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 70px rgba(13,50,37,.16);
+    }
+
+    .showcase-copy:before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--radius-xl) - 1px);
+      border: 1px solid rgba(255,255,255,.055);
+      pointer-events: none;
+    }
+
+    .showcase-copy:after {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      right: -95px;
+      bottom: -92px;
+      background:
+        radial-gradient(circle at 45% 42%, rgba(116, 235, 143, .32), transparent 32%),
+        radial-gradient(circle at 50% 50%, rgba(52,199,89,.13), transparent 64%);
+      filter: blur(18px);
+      opacity: .72;
+      transform: rotate(-12deg);
+    }
+
+    .showcase-copy h2 { color: #f9fff7; }
+    .showcase-copy p { color: rgba(244,255,246,.72); font-size: 17px; line-height: 1.75; max-width: 390px; position: relative; z-index: 2; }
+
+    .mini-list {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .mini-list div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 17px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.09);
+      color: rgba(255,255,255,.88);
+      font-weight: 620;
+    }
+
+    .screens-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .time-screens {
+      align-self: center;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      padding: 10px 0;
+    }
+
+    .time-screens .screen-tile {
+      border-radius: 34px;
+      padding: 9px;
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 22px 64px rgba(22,39,27,.085);
+    }
+
+    .time-screens .screen-tile:nth-child(1) { transform: translateY(18px) rotate(-1.2deg); }
+    .time-screens .screen-tile:nth-child(2) { transform: translateY(-10px) rotate(.8deg); }
+    .time-screens .screen-tile:nth-child(3) { transform: translateY(22px) rotate(1.1deg); }
+
+    .time-screens .screen-tile:hover {
+      transform: translateY(-2px);
+    }
+
+    .time-screens .screen-tile img {
+      aspect-ratio: 9 / 17;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 25px;
+    }
+
+    .screen-tile {
+      border-radius: 32px;
+      padding: 10px;
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(37,39,32,.075);
+      box-shadow: 0 18px 55px rgba(22,39,27,.085);
+      overflow: hidden;
+      transition: transform .28s ease, box-shadow .28s ease;
+    }
+
+    .screen-tile:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 24px 68px rgba(22,39,27,.12);
+    }
+    .screen-tile img { border-radius: 24px; aspect-ratio: 921/2048; object-fit: cover; width: 100%; }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 34px;
+    }
+    .gallery .screen-tile:nth-child(even) { margin-top: 46px; }
+
+    .download {
+      padding-bottom: 120px;
+    }
+    .download-card {
+      border-radius: 44px;
+      background:
+        radial-gradient(circle at 78% 20%, rgba(52,199,89,.24), transparent 28%),
+        linear-gradient(135deg, #fdfcf8, #eff7ee);
+      border: 1px solid rgba(37,39,32,.1);
+      padding: clamp(32px, 7vw, 74px);
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 32px;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .download h2 { max-width: 620px; }
+
+    .download-title {
+      font-size: clamp(46px, 5.1vw, 78px);
+      line-height: 1.03;
+      letter-spacing: -.038em;
+      text-wrap: balance;
+      max-width: 640px;
+    }
+
+    .download-title span {
+      display: block;
+    }
+
+    .download-title span:nth-child(1) {
+      white-space: nowrap;
+    }
+
+    .download-title span:nth-child(2) {
+      width: fit-content;
+    }
+
+    .download-title span:nth-child(3) {
+      width: fit-content;
+      letter-spacing: -.025em;
+    }
+
+    .download p { color: var(--muted); line-height: 1.8; font-size: 18px; max-width: 560px; }
+    .download-box {
+      justify-self: end;
+      width: min(100%, 340px);
+      border-radius: 32px;
+      padding: 26px;
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(255,255,255,.7);
+    }
+    .download-box .brand-mark { width: 72px; height: 72px; border-radius: 22px; padding: 16px; }
+    .version {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.68;
+      max-width: 320px;
+      text-wrap: pretty;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 22px 42px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; padding-top: 56px; min-height: auto; }
+      .phone-stage { min-height: 620px; }
+      .float-card.one { left: 2%; }
+      .float-card.two { right: 2%; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .showcase { grid-template-columns: 1fr; }
+      .showcase-copy { min-height: auto; }
+      .screens-grid { grid-template-columns: repeat(3, 1fr); }
+      .time-screens {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .gallery { grid-template-columns: repeat(3, 1fr); }
+      .download-card { grid-template-columns: 1fr; }
+      .download-box { justify-self: start; }
+    }
+
+    @media (max-width: 680px) {
+      .nav-links a:not(.pill) { display: none; }
+      .nav-inner { padding: 14px 16px; }
+      .hero { padding: 48px 16px 34px; gap: 20px; }
+      h1 {
+        font-size: clamp(52px, 15.4vw, 76px);
+        line-height: 1.08;
+        letter-spacing: -.032em;
+      }
+      .hero h1 .line { white-space: normal; }
+      .hero-copy { font-size: 17px; }
+      .phone-stage { min-height: 520px; overflow: hidden; }
+      .phone { width: 74vw; transform: rotate(0deg); }
+      .float-card { display: none; }
+      section { padding: 68px 16px; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .screens-grid { grid-template-columns: 1fr 1fr; }
+      .time-screens {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 6px 4px 18px;
+        scroll-snap-type: x mandatory;
+      }
+      .time-screens .screen-tile {
+        min-width: 58vw;
+        scroll-snap-align: center;
+        transform: none !important;
+      }
+      .gallery { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+      .gallery .screen-tile { min-width: 72vw; scroll-snap-align: center; }
+      .gallery .screen-tile:nth-child(even) { margin-top: 0; }
+      .download-title {
+        font-size: clamp(44px, 13vw, 62px);
+        line-height: 1.06;
+      }
+      .download-title span:nth-child(1) {
+        white-space: normal;
+      }
+      .download-card { border-radius: 32px; padding: 28px; }
+      .pill { width: 100%; }
+      .hero-actions { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>Loma</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#screens">截图</a>
+        <a href="#download" class="pill primary">下载 Android</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Calm productivity, beautifully designed</div>
+        <h1><span class="line">把重要的事，</span><span class="line">轻轻留在身边<span class="dot">。</span></span></h1>
+        <p class="hero-copy">
+          Loma 是一个安静、克制、漂亮的目标陪伴 App。用今天、本周、本月、今年四个时间尺度，把长期目标拆成温柔、可见、不会打扰你的下一步。
+        </p>
+        <div class="hero-actions">
+          <a class="pill primary" href="#download">下载 APK</a>
+          <a class="pill" href="#screens">查看界面</a>
+        </div>
+        <div class="hero-meta">
+          <span>本地优先</span>
+          <span>桌面小部件</span>
+          <span>分享卡片</span>
+          <span>热力图回顾</span>
+        </div>
+      </div>
+
+      <div class="phone-stage" aria-label="Loma app preview">
+        <div class="aura"></div>
+        <div class="phone">
+          <img src="./assets/screens/today.webp" alt="Loma 今日目标界面" loading="eager" />
+        </div>
+        <div class="float-card one">
+          <div class="float-label">Today</div>
+          <div class="float-title">轻轻靠近一件事</div>
+          <p>不需要复杂系统，只留下今天真正重要的目标。</p>
+        </div>
+        <div class="float-card two">
+          <div class="float-label">Widget</div>
+          <div class="float-title">不用打开 App</div>
+          <p>目标待办可以停在桌面上，抬眼就能看到。</p>
+        </div>
+      </div>
+    </header>
+
+    <section id="features">
+      <div class="section-head">
+        <div class="kicker">Designed for intention</div>
+        <h2>不是又一个待办清单。<br />而是一个更安静的目标容器。</h2>
+        <p class="section-lead">
+          Loma 的设计目标不是催促你完成更多，而是帮助你在不同时间尺度里保持方向感。
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="num">01</div>
+          <h3>四个时间尺度</h3>
+          <p>今天、本周、本月、今年自然切换，让短期行动和长期目标在同一个系统里呼吸。</p>
+        </article>
+        <article class="feature">
+          <div class="num">02</div>
+          <h3>桌面小部件</h3>
+          <p>把目标放到桌面。无需打开 App，也能在关键时刻看见自己真正想靠近的事。</p>
+        </article>
+        <article class="feature">
+          <div class="num">03</div>
+          <h3>高级分享卡片</h3>
+          <p>一键导出干净、克制的目标卡片，适合记录、分享、复盘或留给未来的自己。</p>
+        </article>
+        <article class="feature">
+          <div class="num">04</div>
+          <h3>热力图回顾</h3>
+          <p>用温和的可视化看到自己的节奏，而不是被数字和红点焦虑推着走。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="showcase-section" id="screens">
+      <div class="showcase">
+        <div class="showcase-copy">
+          <div>
+            <div class="kicker" style="color:#90e7a6;">Time scales</div>
+            <h2>从一天，到一年。</h2>
+            <p>
+              Loma 把时间拆成四个清晰维度：今天负责行动，本周负责节奏，本月负责推进，今年负责方向。
+            </p>
+          </div>
+          <div class="mini-list">
+            <div><span>今天</span><span>Daily focus</span></div>
+            <div><span>本周</span><span>Weekly rhythm</span></div>
+            <div><span>本月</span><span>Monthly progress</span></div>
+            <div><span>今年</span><span>Yearly intention</span></div>
+          </div>
+        </div>
+
+        <div class="screens-grid time-screens">
+          <div class="screen-tile"><img src="./assets/screens/week.webp" alt="本周目标界面" loading="lazy" /></div>
+          <div class="screen-tile"><img src="./assets/screens/month.webp" alt="本月目标界面" loading="lazy" /></div>
+          <div class="screen-tile"><img src="./assets/screens/year.webp" alt="今年目标界面" loading="lazy" /></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="kicker">Moments that stay</div>
+        <h2>目标、回顾、小部件，<br />都保持同一种安静气质。</h2>
+        <p class="section-lead">
+          从 App 内界面到桌面小部件，从分享卡片到热力图，Loma 的视觉语言保持一致：留白、克制、清晰。
+        </p>
+      </div>
+
+      <div class="gallery">
+        <div class="screen-tile"><img src="./assets/screens/review-card.webp" alt="回顾分享卡片" loading="lazy" /></div>
+        <div class="screen-tile"><img src="./assets/screens/save-modal.webp" alt="保存图片弹窗" loading="lazy" /></div>
+        <div class="screen-tile"><img src="./assets/screens/heatmap-modal.webp" alt="热力图弹窗" loading="lazy" /></div>
+        <div class="screen-tile"><img src="./assets/screens/settings.webp" alt="个性化设置" loading="lazy" /></div>
+        <div class="screen-tile"><img src="./assets/screens/widgets.webp" alt="桌面小部件" loading="lazy" /></div>
+      </div>
+    </section>
+
+    <section id="download" class="download">
+      <div class="download-card">
+        <div>
+          <div class="kicker">Launch preview</div>
+          <h2 class="download-title"><span>在安卓手机上，</span><span>开始使用</span><span>Loma。</span></h2>
+          <p>
+            下载 APK 后即可开始使用。目标数据默认保存在本机，适合日常目标管理、轻量复盘与桌面小部件提醒。
+          </p>
+          <div class="hero-actions">
+            <a class="pill green" href="./Loma.apk">下载 Loma APK</a>
+            <a class="pill" href="mailto:hello@loma.app?subject=Loma%20Feedback">反馈建议</a>
+          </div>
+        </div>
+        <div class="download-box">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <h3 style="font-size:28px; letter-spacing:-.05em; margin:22px 0 0;">Loma for Android</h3>
+          <div class="version">
+            Install the APK and start using Loma right away. Your goals stay on your device, ready for daily planning, gentle reviews, and home-screen widgets.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>© 2026 Loma. Keep what matters close, gently.</div>
+      <div>Made for calm focus.</div>
+    </div>
+  </footer>
+</body>
+</html>
